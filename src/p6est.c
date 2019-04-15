@@ -1784,7 +1784,7 @@ typedef struct p6est_weight_column
 }
 p6est_weight_column_t;
 
-static int
+static double
 p6est_weight_fn (p4est_t * p4est, p4est_topidx_t which_tree,
                  p4est_quadrant_t * q)
 {
@@ -1792,7 +1792,7 @@ p6est_weight_fn (p4est_t * p4est, p4est_topidx_t which_tree,
   p6est_weight_column_t *wc = (p6est_weight_column_t *) p6est->user_pointer;
   void               *orig_pointer = wc->user_pointer;
   size_t              first, last, zz;
-  int                 weight = 0;
+  double              weight = 0.0;
 
   p6est->user_pointer = orig_pointer;
 

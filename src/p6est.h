@@ -278,7 +278,7 @@ typedef int         (*p6est_coarsen_layer_t) (p6est_t * p6est,
  * \return a 32bit integer >= 0 as the quadrant weight.
  * \note    Global sum of weights must fit into a 64bit integer.
  */
-typedef int         (*p6est_weight_t) (p6est_t * p6est,
+typedef double      (*p6est_weight_t) (p6est_t * p6est,
                                        p4est_topidx_t which_tree,
                                        p4est_quadrant_t * column,
                                        p2est_quadrant_t * layer);

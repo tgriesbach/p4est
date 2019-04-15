@@ -646,13 +646,13 @@ p4est_wrap_adapt (p4est_wrap_t * pp)
   return changed;
 }
 
-static int
+static double
 partition_weight (p4est_t * p4est, p4est_topidx_t which_tree,
                   p4est_quadrant_t * quadrant)
 {
   p4est_wrap_t       *pp = (p4est_wrap_t *) p4est->user_pointer;
 
-  return 1 << ((int) quadrant->level * pp->weight_exponent);
+  return (double) (1 << ((int) quadrant->level * pp->weight_exponent));
 }
 
 static void

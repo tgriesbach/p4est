@@ -119,11 +119,11 @@ coarsen_column_fn (p6est_t * p6est, p4est_topidx_t which_tree,
   return 1;
 }
 
-static int
+static double
 weight_fn (p6est_t * p6est, p4est_topidx_t which_tree,
            p4est_quadrant_t * col, p2est_quadrant_t * layer)
 {
-  return 1;
+  return 1.0;
 }
 
 static int

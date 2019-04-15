@@ -221,7 +221,7 @@ typedef int         (*p8est_coarsen_t) (p8est_t * p8est,
  * \return a 32bit integer >= 0 as the quadrant weight.
  * \note    Global sum of weights must fit into a 64bit integer.
  */
-typedef int         (*p8est_weight_t) (p8est_t * p8est,
+typedef double      (*p8est_weight_t) (p8est_t * p8est,
                                        p4est_topidx_t which_tree,
                                        p8est_quadrant_t * quadrant);
 

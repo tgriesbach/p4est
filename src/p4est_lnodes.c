@@ -3358,13 +3358,13 @@ p4est_lnodes_count_volume (p4est_iter_volume_info_t * info, void *user_data)
   part->weights[quadid] += part->nodes_per_volume;
 }
 
-static int
+static double
 p4est_lnodes_weight (p4est_t * p4est, p4est_topidx_t which_tree,
                      p4est_quadrant_t * quadrant)
 {
   p4est_part_lnodes_t *part = (p4est_part_lnodes_t *) p4est->user_pointer;
   int                 count = part->count;
-  int                 weight = part->weights[count];
+  double              weight = part->weights[count];
 
   part->count++;
 

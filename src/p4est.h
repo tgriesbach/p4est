@@ -222,10 +222,10 @@ typedef int         (*p4est_coarsen_t) (p4est_t * p4est,
 /** Callback function prototype to calculate weights for partitioning.
  * \param [in] p4est       the forest
  * \param [in] which_tree  the tree containing \a quadrant
- * \return a 32bit integer >= 0 as the quadrant weight.
+ * \return a 64bit double >= 0 as the quadrant weight.
  * \note    Global sum of weights must fit into a 64bit integer.
  */
-typedef int         (*p4est_weight_t) (p4est_t * p4est,
+typedef double      (*p4est_weight_t) (p4est_t * p4est,
                                        p4est_topidx_t which_tree,
                                        p4est_quadrant_t * quadrant);
 

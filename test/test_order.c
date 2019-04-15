@@ -73,11 +73,11 @@ refine_fn (p4est_t * p4est, p4est_topidx_t which_tree,
   return 1;
 }
 
-static int
+static double
 weight_one (p4est_t * p4est, p4est_topidx_t which_tree,
             p4est_quadrant_t * quadrant)
 {
-  return 1;
+  return 1.0;
 }
 
 static int
@@ -324,15 +324,15 @@ p4est_check_local_order (p4est_t * p4est, p4est_connectivity_t * connectivity)
 static int          weight_counter;
 static int          weight_index;
 
-static int
+static double
 weight_once (p4est_t * p4est, p4est_topidx_t which_tree,
              p4est_quadrant_t * quadrant)
 {
   if (weight_counter++ == weight_index) {
-    return 1;
+    return 1.0;
   }
 
-  return 0;
+  return 0.0;
 }
 
 int
