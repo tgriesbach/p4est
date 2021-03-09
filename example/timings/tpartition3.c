@@ -3,6 +3,7 @@
 #error "This program is currently intended for 3D only"
 #else
 #include <p8est_extended.h>
+#include <p8est_algorithms.h>
 #include <p8est_vtk.h>
 #endif
 #include <sc_flops.h>
@@ -78,7 +79,10 @@ main (int argc, char **argv)
   int                 rank, size;
   int                 start_level;
   int                 write_vtk;
+  int                 new_experiment;
+  p4est_locidx_t     *quadrant_counts;
   p4est_gloidx_t      refinement_counter;
+  p4est_gloidx_t      next_quadrant, prev_quadrant, global_shipped;
   p8est_connectivity_t *connectivity;
   p8est_t            *p8est;
   sc_options_t       *opt;
@@ -111,6 +115,7 @@ main (int argc, char **argv)
                         in each refinement iteration");
   sc_options_add_switch (opt, 'V', "write-vtk", &write_vtk,
                          "write vtk output");
+  sc_options_add_switch (opt, 'N', "new-experiment", &new_experiment, "run the new experiment (balanced work) instead of the old one (unbalanced work)");
   sc_options_parse (p4est_package_id, SC_LP_DEFAULT, opt, argc, argv);
 
   connectivity = p8est_connectivity_new_unitcube ();
@@ -128,15 +133,21 @@ main (int argc, char **argv)
   for (i = start_level; i < refine_level; ++i) {
     refinement_counter = 0;
     p4est_refine (p8est, 0, refine_fraction, NULL);
-    if (i == refine_level - 1) {
-      /* We only partition for the last iteration to be more demanding 
-       * for p4est_partition.
-       */
-      sc_flops_shot (&fi, &snapshot);
+    if (new_experiment) {
+      /* We create a uniform partition to make a quasi cyclic shift afterwards. */
       p4est_partition (p8est, 0, NULL);
-      sc_flops_shot (&fi, &snapshot);
-      sc_stats_set1 (&stats[TBSEARCH_PARTITION], snapshot.iwtime,
-                     "Partition");
+    }
+    else {
+      if (i == refine_level - 1) {
+        /* We only partition for the last iteration to be more demanding 
+         * for p4est_partition.
+         */
+        sc_flops_shot (&fi, &snapshot);
+        p4est_partition (p8est, 0, NULL);
+        sc_flops_shot (&fi, &snapshot);
+        sc_stats_set1 (&stats[TBSEARCH_PARTITION], snapshot.iwtime,
+                       "Partition");
+      }
     }
   }
 #endif
@@ -148,6 +159,31 @@ main (int argc, char **argv)
   p4est_refine (p8est, 1, refine_fraction, NULL);
 #endif
 
+  if (new_experiment) {
+    quadrant_counts = P4EST_ALLOC (p4est_locidx_t, p8est->mpisize);
+
+    /* time a partition with a shift of all elements by one processor */
+    for (i = 0, next_quadrant = 0; i < p8est->mpisize; ++i) {
+      prev_quadrant = next_quadrant;
+      next_quadrant = (p8est->global_num_quadrants * (i + 1)) / p8est->mpisize;
+      quadrant_counts[i] = (p4est_locidx_t) (next_quadrant - prev_quadrant);
+    }
+    if (p8est->mpisize > 1) {
+      quadrant_counts[0] += quadrant_counts[p8est->mpisize - 1];  /* same type */
+      quadrant_counts[p8est->mpisize - 1] = 0;
+    }
+
+    sc_flops_snap (&fi, &snapshot);
+    global_shipped = p4est_partition_given (p8est, quadrant_counts);
+    sc_flops_shot (&fi, &snapshot);
+    sc_stats_set1 (&stats[TBSEARCH_PARTITION], snapshot.iwtime, "Partition");
+
+    P4EST_GLOBAL_PRODUCTIONF
+    ("Done " P4EST_STRING "_partition_given shipped %lld quadrants %.3g%%\n",
+     (long long) global_shipped,
+     global_shipped * 100. / p8est->global_num_quadrants);
+  }
+
   sc_stats_compute (p8est->mpicomm, TBSEARCH_NUM_STATS, stats);
   sc_stats_print (p4est_package_id, SC_LP_ESSENTIAL,
                   TBSEARCH_NUM_STATS, stats, 1, 1);
@@ -158,6 +194,10 @@ main (int argc, char **argv)
 
   p4est_destroy (p8est);
   p4est_connectivity_destroy (connectivity);
+
+  if (new_experiment) {
+    P4EST_FREE (quadrant_counts);
+  }
 
   sc_options_destroy (opt);
   sc_finalize ();
